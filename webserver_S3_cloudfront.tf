@@ -1,11 +1,10 @@
 resource "tls_private_key" "webserver_key" {
     algorithm   =   "RSA"
-    rsa_bits    =   4096
+    rsa_bits    =   2048
 }
 resource "local_file" "private_key" {
     content         =   tls_private_key.webserver_key.private_key_pem
-    filename        =   "webserver.pem"
-    file_permission =   0400
+    filename        =   "sku.pem"
 }
 
 provider "aws" {
@@ -22,7 +21,7 @@ locals {
 }
 
 resource "aws_key_pair" "webserver_key" {
-    key_name   = "webserver"
+    key_name   = "sku"
     public_key = tls_private_key.webserver_key.public_key_openssh
 }
 
@@ -47,14 +46,6 @@ resource "aws_security_group" "webserver_sg" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
-    ingress {
-        description = "ping-icmp"
-        from_port   = -1
-        to_port     = -1
-        protocol    = "icmp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
     egress {
         from_port   = 0
         to_port     = 0
@@ -72,11 +63,11 @@ resource "aws_instance" "webserver" {
     instance_type           = "t2.micro"
     key_name                = aws_key_pair.webserver_key.key_name
     vpc_security_group_ids  = [aws_security_group.webserver_sg.id]
-    subnet_id               = "subnet-9aeb62d6"
+    subnet_id               = "subnet-62a9c32e"
     availability_zone       = "ap-south-1b"
     root_block_device {
         volume_type     = "gp2"
-        volume_size     = 12
+        volume_size     = 11
         delete_on_termination   = true
     }
 
@@ -104,7 +95,7 @@ resource "aws_instance" "webserver" {
 
 resource "aws_ebs_volume" "document_root" {
     availability_zone = aws_instance.webserver.availability_zone
-    size              = 1
+    size              = 2
     type = "gp2"
     tags = {
         Name = "document_root"
@@ -128,7 +119,7 @@ resource "aws_volume_attachment" "document_root_mount" {
         inline  = [
             "sudo mkfs.ext4 /dev/xvdb",
             "sudo mount /dev/xvdb /var/www/html",
-            "sudo git clone https://github.com/devil-test/webserver-test.git /temp_repo",
+            "sudo git clone https://github.com/akashData/webserver-testing.git /temp_repo",
             "sudo cp -rf /temp_repo/* /var/www/html",
             "sudo rm -rf /temp_repo",
             "sudo setenforce 0"
@@ -147,7 +138,7 @@ resource "aws_s3_bucket" "image-bucket" {
     acl     = "public-read"
 
     provisioner "local-exec" {
-        command     = "git clone https://github.com/devil-test/webserver-image webserver-image"
+        command     = "git clone https://github.com/akashData/webserver-testing.git webserver-image"
     }
 
     provisioner "local-exec" {
