@@ -1,7 +1,7 @@
 # terraform
 Task1: 
 
-=> Have to create/launch Application using Terraform :
+Have to create/launch Application using Terraform :-
 
 1. Create the key and security group which allow the port 80, 22.
 
